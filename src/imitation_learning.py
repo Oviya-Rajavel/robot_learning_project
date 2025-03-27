@@ -172,13 +172,31 @@ def main():
     dataset = RLBenchDemoDataset(demos)
     
     # Split dataset into train and validation
-    train_size = int(0.8 * len(dataset))
-    val_size = len(dataset) - train_size
-    train_dataset, val_dataset = random_split(dataset, [train_size, val_size])
+    total_size = len(dataset)
+
+    train_ratio=0.8, 
+    val_ratio=0.15
+
+    train_size = int(total_size * train_ratio)
+    val_size = int(total_size * val_ratio)
+    test_size = total_size - train_size - val_size
+    train_dataset, val_dataset, test_dataset = random_split(
+        dataset, 
+        [train_size, val_size, test_size],
+        generator=torch.Generator().manual_seed(42)  # for reproducibility
+    )
+
+    
+    
     
     # Create dataloaders
     train_loader = DataLoader(train_dataset, batch_size=16, shuffle=True) #len(train_dataset)
     val_loader = DataLoader(val_dataset, batch_size=16, shuffle=False)
+    test_loader = DataLoader(
+        test_dataset, 
+        batch_size=len(test_dataset), 
+        shuffle=False, 
+    )
     
     # Initialize TensorBoard Logger
     tensorboard_logger = TensorBoardLogger(
@@ -224,8 +242,14 @@ def main():
         val_dataloaders=val_loader
     )
     
-    # Save the final model
-    torch.save(model.state_dict(), 'rlbench_imitation_learning.pth')
+    ckpt_save_file = "rlbench_cnn_single_img.ckpt"
+    trainer.save_checkpoint(ckpt_save_file)
+    print("Training complete!")
+    ##testing the model:
+    print("Testing....")
+    
+    model = ImitationLearningCNN.load_from_checkpoint(ckpt_save_file)
+    trainer.test(model, dataloaders=test_loader)
     
     # Shutdown environment
     env.shutdown()
