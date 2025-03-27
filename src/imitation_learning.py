@@ -1,122 +1,3 @@
-# import numpy as np
-
-# from rlbench.action_modes.action_mode import MoveArmThenGripper
-# from rlbench.action_modes.arm_action_modes import JointVelocity
-# from rlbench.action_modes.gripper_action_modes import Discrete
-# from rlbench.environment import Environment
-# from rlbench.observation_config import ObservationConfig, CameraConfig
-# from rlbench.tasks import ReachTarget
-# from rlbench.tasks.taskboard_robothon import TaskboardRobothon
-
-
-# class ImitationLearning(object):
-
-#     def predict_action(self, batch):
-#         return np.random.uniform(size=(len(batch), 7))
-
-#     def behaviour_cloning_loss(self, ground_truth_actions, predicted_actions):
-#         return 1
-
-
-# # To use 'saved' demos, set the path below, and set live_demos=False
-# live_demos = False
-# DATASET = '' if live_demos else '/media/sun/Expansion/Robot_learning'
-# cam_config = CameraConfig(mask=False)
-# class ImitationLearning(object):
-
-#     def predict_action(self, batch):
-#         return np.random.uniform(size=(len(batch), 7))
-
-#     def behaviour_cloning_loss(self, ground_truth_actions, predicted_actions):
-#         return 1
-
-
-# # To use 'saved' demos, set the path below, and set live_demos=False
-# live_demos = False
-# DATASET = '' if live_demos else '/media/sun/Expansion/Robot_learning'
-# cam_config = CameraConfig(mask=False)
-# obs_config = ObservationConfig(left_shoulder_camera = cam_config,
-#                                right_shoulder_camera=cam_config,
-#                                overhead_camera = cam_config,
-#                                wrist_camera=cam_config,
-#                                front_camera=cam_config)
-# #obs_config.set_all(True)
-
-# env = Environment(
-#     action_mode=MoveArmThenGripper(
-#         arm_action_mode=JointVelocity(), gripper_action_mode=Discrete()),
-#         dataset_root=DATASET,
-#     obs_config=obs_config,#ObservationConfig(),
-#     headless=False)
-# env.launch()
-
-# task = env.get_task(TaskboardRobothon)
-
-# il = ImitationLearning()
-
-# demos = task.get_demos(1, live_demos=live_demos)  # -> List[List[Observation]]
-# demos = np.array(demos).flatten()
-
-# # An example of using the demos to 'train' using behaviour cloning loss.
-# for i in range(100):
-#     print("'training' iteration %d" % i)
-#     batch = np.random.choice(demos, replace=False)
-#     # print(batch.wrist_rgb)
-#     batch_images = [obs for obs in batch.wrist_rgb]
-#     predicted_actions = il.predict_action(batch_images)
-#     ground_truth_actions = [obs for obs in batch.gripper_pose]
-#     loss = il.behaviour_cloning_loss(ground_truth_actions, predicted_actions)
-
-# print('Done')
-# env.shutdown()
-import os
-import numpy as np
-import torch
-from torch.utils.data import DataLoader, random_split
-import pytorch_lightning as pl
-from pytorch_lightning.loggers import TensorBoardLogger
-
-from rlbench.action_modes.action_mode import MoveArmThenGripper
-from rlbench.action_modes.arm_action_modes import JointVelocity
-from rlbench.action_modes.gripper_action_modes import Discrete
-from rlbench.environment import Environment
-from rlbench.observation_config import ObservationConfig, CameraConfig
-from rlbench.tasks.taskboard_robothon import TaskboardRobothon
-from behaviour_cloning_cnn import ImitationLearningCNN, RLBenchDemoDataset
-# obs_config = ObservationConfig(left_shoulder_camera = cam_config,
-#                                right_shoulder_camera=cam_config,
-#                                overhead_camera = cam_config,
-#                                wrist_camera=cam_config,
-#                                front_camera=cam_config)
-# #obs_config.set_all(True)
-
-# env = Environment(
-#     action_mode=MoveArmThenGripper(
-#         arm_action_mode=JointVelocity(), gripper_action_mode=Discrete()),
-#         dataset_root=DATASET,
-#     obs_config=obs_config,#ObservationConfig(),
-#     headless=False)
-# env.launch()
-
-# task = env.get_task(TaskboardRobothon)
-
-# il = ImitationLearning()
-
-# demos = task.get_demos(1, live_demos=live_demos)  # -> List[List[Observation]]
-# demos = np.array(demos).flatten()
-
-# # An example of using the demos to 'train' using behaviour cloning loss.
-# for i in range(100):
-#     print("'training' iteration %d" % i)
-#     batch = np.random.choice(demos, replace=False)
-#     # print(batch.wrist_rgb)
-#     batch_images = [obs for obs in batch.wrist_rgb]
-#     predicted_actions = il.predict_action(batch_images)
-#     ground_truth_actions = [obs for obs in batch.gripper_pose]
-#     loss = il.behaviour_cloning_loss(ground_truth_actions, predicted_actions)
-
-# print('Done')
-# env.shutdown()
 import os
 import numpy as np
 import torch
@@ -153,7 +34,7 @@ def main():
             arm_action_mode=JointVelocity(), 
             gripper_action_mode=Discrete()
         ),
-        dataset_root='/media/sun/Expansion/Robot_learning',  # Update with your dataset path
+        dataset_root='/media/sun/Expansion/Robot_learning',  # dataset path
         obs_config=obs_config,
         headless=True
     )
@@ -164,17 +45,15 @@ def main():
     
     # Get demonstrations
     live_demos = False
-    demos = task.get_demos(1, live_demos=live_demos)
-    # print(demos[0]._observations)
-    # demos = np.array(demos).flatten()
+    demos = task.get_demos(-1, live_demos=live_demos)
     
     # Create dataset
     dataset = RLBenchDemoDataset(demos)
     
-    # Split dataset into train and validation
+    # Split dataset into train and validation and test
     total_size = len(dataset)
 
-    train_ratio=0.8, 
+    train_ratio=0.8
     val_ratio=0.15
 
     train_size = int(total_size * train_ratio)
@@ -186,9 +65,6 @@ def main():
         generator=torch.Generator().manual_seed(42)  # for reproducibility
     )
 
-    
-    
-    
     # Create dataloaders
     train_loader = DataLoader(train_dataset, batch_size=16, shuffle=True) #len(train_dataset)
     val_loader = DataLoader(val_dataset, batch_size=16, shuffle=False)

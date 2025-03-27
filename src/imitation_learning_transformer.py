@@ -92,7 +92,6 @@ def train_pose_transformer(demos,
     
     return model, trainer, logger, test_loader
 
-
 def main():
     # Create logs directory
     os.makedirs('lightning_logs', exist_ok=True)
@@ -124,11 +123,21 @@ def main():
     
     # Get demonstrations
     live_demos = False
-    demos = task.get_demos(-1, live_demos=live_demos)
+    all_demos = True
+    max_epochs = 1
+    print("Loading demos....")
+    if all_demos:
+        max_epochs = 50
+        demos = task.get_demos(-1, live_demos=live_demos)
+    else:
+        max_epochs = 1
+        demos = task.get_demos(1, live_demos=live_demos)
+    print("Demo loading completed....")
     # print(demos[0]._observations)
     # demos = np.array(demos).flatten()
 
-    model, trainer, logger, test_loader = train_pose_transformer(demos)
+    model, trainer, logger, test_loader = train_pose_transformer(demos=demos, 
+                                                                 max_epochs = max_epochs)
     
     # Save the final model
     #ckpt_save_file = "rlbench_transformer.pth"

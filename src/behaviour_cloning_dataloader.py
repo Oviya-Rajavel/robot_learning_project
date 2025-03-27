@@ -124,31 +124,6 @@ class RLBenchDemoDatasetBatcher(Dataset):
         """
         return self.demos[idx]
 
-# def create_demo_batch_dataloader(demos, batch_size=1, shuffle=True, num_workers=0):
-#     """
-#     Create a DataLoader that batches entire demos
-    
-#     Args:
-#         demos (list): List of RLBench demo objects
-#         batch_size (int, optional): Number of demos per batch. Defaults to 1.
-#         shuffle (bool, optional): Whether to shuffle the demos. Defaults to True.
-#         num_workers (int, optional): Number of subprocesses for data loading. Defaults to 0.
-    
-#     Returns:
-#         DataLoader: A DataLoader that yields entire demos as batches
-#     """
-#     # Create the demo batcher dataset
-#     #demo_dataset = RLBenchDemoDatasetBatcher(demos)
-#     #
-#     ## Create and return the DataLoader
-#     #return DataLoader(
-#     #    demo_dataset, 
-#     #    batch_size=batch_size, 
-#     #    shuffle=shuffle, 
-#     #    num_workers=num_workers
-#     #)
-
-
 
 def create_dataloaders(demos, batch_size=1, num_workers=0, train_ratio=0.8, val_ratio=0.15, shuffle=True):
     """
@@ -199,6 +174,29 @@ def create_dataloaders(demos, batch_size=1, num_workers=0, train_ratio=0.8, val_
         batch_size=1, 
         shuffle=False, 
         num_workers=num_workers,
+# def create_demo_batch_dataloader(demos, batch_size=1, shuffle=True, num_workers=0):
+#     """
+#     Create a DataLoader that batches entire demos
+    
+#     Args:
+#         demos (list): List of RLBench demo objects
+#         batch_size (int, optional): Number of demos per batch. Defaults to 1.
+#         shuffle (bool, optional): Whether to shuffle the demos. Defaults to True.
+#         num_workers (int, optional): Number of subprocesses for data loading. Defaults to 0.
+    
+#     Returns:
+#         DataLoader: A DataLoader that yields entire demos as batches
+#     """
+#     # Create the demo batcher dataset
+#     #demo_dataset = RLBenchDemoDatasetBatcher(demos)
+#     #
+#     ## Create and return the DataLoader
+#     #return DataLoader(
+#     #    demo_dataset, 
+#     #    batch_size=batch_size, 
+#     #    shuffle=shuffle, 
+#     #    num_workers=num_workers
+#     #)
         collate_fn=custom_collate_fn
     )
     
