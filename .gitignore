@@ -1,0 +1,8 @@
+lightning_logs/
+lightning_logs_window_final/
+logs/
+src/*.ckpt
+src/*.pt
+*.ckpt
+*.pt
+src/__pycache__

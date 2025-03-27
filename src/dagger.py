@@ -504,7 +504,7 @@ def main():
         pose_input_dim=7, 
         pose_output_dim=7,
         learning_rate=1e-4,
-        model_path='/home/sun/rl/RLBench/examples/rlbench_transformer.pth',
+        model_path='/media/sun/Expansion/Robot_learning/rlbench_transformer.pth',
         validation_split=0.2  # 20% of data for validation
     )
     
