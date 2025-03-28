@@ -15,10 +15,9 @@ from behaviour_cloning_cnn import ImitationLearningCNN, RLBenchDemoDataset
 
 
 def main():
-    # Create logs directory
+
     os.makedirs('logs', exist_ok=True)
-    
-    # RLBench Environment Setup
+
     cam_config = CameraConfig(mask=False)
     obs_config = ObservationConfig(
         left_shoulder_camera=cam_config,
@@ -27,8 +26,7 @@ def main():
         wrist_camera=cam_config,
         front_camera=cam_config
     )
-    
-    # Set up environment
+
     env = Environment(
         action_mode=MoveArmThenGripper(
             arm_action_mode=JointVelocity(), 
@@ -40,17 +38,16 @@ def main():
     )
     env.launch()
     
-    # Get task
+
     task = env.get_task(TaskboardRobothon)
     
-    # Get demonstrations
+
     live_demos = False
     demos = task.get_demos(-1, live_demos=live_demos)
     
-    # Create dataset
+
     dataset = RLBenchDemoDataset(demos)
-    
-    # Split dataset into train and validation and test
+
     total_size = len(dataset)
 
     train_ratio=0.8
@@ -65,7 +62,6 @@ def main():
         generator=torch.Generator().manual_seed(42)  # for reproducibility
     )
 
-    # Create dataloaders
     train_loader = DataLoader(train_dataset, batch_size=16, shuffle=True) #len(train_dataset)
     val_loader = DataLoader(val_dataset, batch_size=16, shuffle=False)
     test_loader = DataLoader(
@@ -73,15 +69,13 @@ def main():
         batch_size=len(test_dataset), 
         shuffle=False, 
     )
-    
-    # Initialize TensorBoard Logger
+
     tensorboard_logger = TensorBoardLogger(
         save_dir='logs',
         name='rlbench_imitation_learning',
         version=None
     )
-    
-    # Initialize model
+
     model = ImitationLearningCNN(input_channels=3) #, pose_dim=7
     
     early_stop_callback = pl.callbacks.EarlyStopping(
@@ -92,7 +86,6 @@ def main():
         mode='min'
     )
 
-    # Initialize Trainer
     trainer = pl.Trainer(
         max_epochs=50,
         accelerator='gpu',
@@ -106,8 +99,7 @@ def main():
                 filename='rlbench_imitation_learning-{epoch:02d}-{val_loss:.2f}',
                 save_top_k=3,
                 monitor='val_loss'
-            )#,
-            #early_stop_callback
+            )
         ]
     )
     

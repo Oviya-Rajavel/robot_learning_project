@@ -24,37 +24,22 @@ def train_pose_transformer(demos,
                             train = True):
     """
     Train the Pose Transformer using PyTorch Lightning
-    
-    Args:batch_size
-        demos (list): List of RLBench demo objects
-        max_epochs (int): Maximum number of training epochs
-        batch_size (int): Batch size for training
-        log_dir (str): Directory for TensorBoard logsepoc
     """
-    # Create dataloader
-    #train_loader, val_loader, test_loader = create_dataloaders(
-    #    demos, 
-    #    batch_size=1,  # Each batch is one full demo
-    #    shuffle=True  # Optional: set to True if you want to randomize demo order
-    #)
     
     train_loader, val_loader, test_loader = create_sequence_prediction_dataloaders(
         demos, 
-        window_size=20,        # Number of timesteps in input sequence
-        prediction_offset=1,   # Predict 1 timestep ahead
-        batch_size=16          # Batch size
+        window_size=20,       
+        prediction_offset=1,   
+        batch_size=16         
     )
 
-    # Initialize model
     model = PoseTransformerLightning()
-    
-    # TensorBoard Logger
+
     logger = pl.loggers.TensorBoardLogger(
         save_dir=log_dir, 
         name='pose_transformer'
     )
-    
-    # Checkpointing
+
     checkpoint_callback = pl.callbacks.ModelCheckpoint(
         monitor='val_loss',
         dirpath=os.path.join(log_dir, 'checkpoints'),
@@ -63,20 +48,13 @@ def train_pose_transformer(demos,
         mode='min'
     )
     
-    # Early stopping
-    early_stop_callback = pl.callbacks.EarlyStopping(
-        monitor='val_loss',
-        min_delta=0.00,
-        patience=10,
-        verbose=True,
-        mode='min'
-    )
+
     
     # Trainer
     trainer = pl.Trainer(
         max_epochs=max_epochs,
         logger=logger,
-        callbacks=[checkpoint_callback],#, early_stop_callback],
+        callbacks=[checkpoint_callback],
         accelerator='auto',
         devices=1 if torch.cuda.is_available() else None,
         check_val_every_n_epoch=1
@@ -93,10 +71,9 @@ def train_pose_transformer(demos,
     return model, trainer, logger, test_loader
 
 def main():
-    # Create logs directory
     os.makedirs('lightning_logs', exist_ok=True)
     
-    # RLBench Environment Setup
+
     cam_config = CameraConfig(mask=False)
     obs_config = ObservationConfig(
         left_shoulder_camera=cam_config,
@@ -117,11 +94,9 @@ def main():
         headless=True
     )
     env.launch()
-    
-    # Get task
+
     task = env.get_task(TaskboardRobothon)
-    
-    # Get demonstrations
+
     live_demos = False
     all_demos = True
     max_epochs = 1
@@ -133,15 +108,12 @@ def main():
         max_epochs = 1
         demos = task.get_demos(1, live_demos=live_demos)
     print("Demo loading completed....")
-    # print(demos[0]._observations)
-    # demos = np.array(demos).flatten()
+
 
     model, trainer, logger, test_loader = train_pose_transformer(demos=demos, 
                                                                  max_epochs = max_epochs)
     
-    # Save the final model
-    #ckpt_save_file = "rlbench_transformer.pth"
-    #torch.save(model.state_dict(), ckpt_save_file)
+
     ckpt_save_file = "rlbench_transformer_window.ckpt"
     trainer.save_checkpoint(ckpt_save_file)
     print("Training complete!")
